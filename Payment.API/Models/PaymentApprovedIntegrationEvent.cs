@@ -2,11 +2,11 @@
 {
     public class PaymentApprovedIntegrationEvent
     {
-        public PaymentApprovedIntegrationEvent(int idProject)
+        public PaymentApprovedIntegrationEvent(int orderId)
         {
-            IdProject = idProject;
+            OrderId = orderId;
         }
 
-        public int IdProject { get; set; }
+        public int OrderId { get; set; }
     }
 }
