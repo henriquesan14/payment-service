@@ -1,4 +1,6 @@
 ﻿using Payment.API.Models;
+using Payment.API.Repositories;
+using Payment.API.Schemas;
 using Payment.API.Services;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -33,14 +35,14 @@ namespace Payment.API.Consumers
         {
             var consumer = new EventingBasicConsumer(_channel);
 
-            consumer.Received += (sender, eventArgs) =>
+            consumer.Received += async (sender, eventArgs) =>
             {
                 var byteArray = eventArgs.Body.ToArray();
                 var paymentInfoJson = Encoding.UTF8.GetString(byteArray);
 
                 var paymentInfo = JsonSerializer.Deserialize<PaymentInfoInputModel>(paymentInfoJson);
 
-                ProcessPayment(paymentInfo!);
+                await ProcessPayment(paymentInfo!);
 
                 var paymentApproved = new PaymentApprovedIntegrationEvent(paymentInfo!.OrderId);
                 var paymentApprovedJson = JsonSerializer.Serialize(paymentApproved);
@@ -61,12 +63,16 @@ namespace Payment.API.Consumers
             return Task.CompletedTask;
         }
 
-        private void ProcessPayment(PaymentInfoInputModel paymentInfo)
+        private async Task ProcessPayment(PaymentInfoInputModel paymentInfo)
         {
             using(var scope = _serviceProvider.CreateScope())
             {
                 var paymentService = scope.ServiceProvider.GetRequiredService<IPaymentService>();
                 paymentService.ProcessPayment(paymentInfo);
+
+                var paymentRepository = scope.ServiceProvider.GetRequiredService<IPaymentRepository>();
+                var schema = new PaymentSchema(paymentInfo.OrderId, paymentInfo.CreditCardNumber, paymentInfo.Cvv, paymentInfo.ExpiresAt, paymentInfo.FullName, paymentInfo.Amount);
+                await paymentRepository.CreateAsync(schema);
             }
         }
     }

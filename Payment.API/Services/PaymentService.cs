@@ -6,7 +6,7 @@ namespace Payment.API.Services
     {
         public void ProcessPayment(PaymentInfoInputModel paymentInfo)
         {
-            Console.WriteLine("Processou!");
+            Console.WriteLine("Processou o pagamento!");
         }
     }
 }

@@ -1,9 +1,15 @@
 using Payment.API.Consumers;
+using Payment.API.Mongo;
+using Payment.API.Repositories;
 using Payment.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.Configure<PaymentDatabaseSettings>(
+    builder.Configuration.GetSection("PaymentsDatabase"));
+builder.Services.AddTransient<IPaymentRepository, PaymentRepository>();
+    
 builder.Services.AddHostedService<ProcessPaymentConsumer>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddControllers();
